@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>БЖУ + Вода</title>
+  <style>
+    :root { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial; }
+    body { margin: 0; background:#0b0c10; color:#e8eaed; }
+    header { padding: 14px 16px; background:#11131a; position: sticky; top:0; border-bottom: 1px solid #22253a; }
+    h1 { margin:0; font-size: 18px; }
+    main { padding: 16px; display: grid; gap: 14px; max-width: 860px; margin: 0 auto; }
+    .card { background:#11131a; border:1px solid #22253a; border-radius: 14px; padding: 14px; }
+    .row { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    label { font-size: 12px; opacity:.85; display:block; margin-bottom: 6px; }
+    input, select, button, textarea { border-radius: 12px; border:1px solid #2a2f4a; background:#0f1118; color:#e8eaed; padding: 10px 12px; font-size: 14px; }
+    input[type="number"] { width: 120px; }
+    button { cursor:pointer; }
+    button.primary { background:#2a6cf6; border-color:#2a6cf6; }
+    button.danger { background:#b42318; border-color:#b42318; }
+    button.ghost { background:transparent; }
+    .pill { padding: 6px 10px; border:1px solid #2a2f4a; border-radius: 999px; font-size: 13px; }
+    .grid4 { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .big { font-size: 22px; font-weight: 700; }
+    .muted { opacity: .75; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #22253a; padding: 10px 6px; font-size: 13px; }
+    th { text-align:left; opacity:.8; font-weight: 600; }
+    .right { text-align:right; }
+    .modal { position: fixed; inset:0; background: rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding: 18px; }
+    .modal.show { display:flex; }
+    .modal .box { width:min(920px, 100%); max-height: 85vh; overflow:auto; }
+    .sep { height: 1px; background:#22253a; margin: 10px 0; }
+    .small { font-size: 12px; }
+    .nowrap { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="row" style="justify-content:space-between">
+      <h1>БЖУ + Вода (сегодня)</h1>
+      <div class="row">
+        <button class="ghost" id="btnProducts">Продукты</button>
+        <button class="ghost" id="btnExport">Экспорт</button>
+        <button class="ghost" id="btnImport">Импорт</button>
+        <button class="danger" id="btnReset">Сброс дня</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="grid4">
+        <div>
+          <div class="muted small">Калории</div>
+          <div class="big" id="totKcal">0</div>
+        </div>
+        <div>
+          <div class="muted small">Белки</div>
+          <div class="big" id="totP">0 г</div>
+        </div>
+        <div>
+          <div class="muted small">Жиры</div>
+          <div class="big" id="totF">0 г</div>
+        </div>
+        <div>
+          <div class="muted small">Углеводы</div>
+          <div class="big" id="totC">0 г</div>
+        </div>
+      </div>
+      <div class="sep"></div>
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <span class="pill">Вода: <b id="totWater">0</b> мл</span>
+          <button id="water200">+200</button>
+          <button id="water300">+300</button>
+          <button id="water500">+500</button>
+          <button class="ghost" id="waterMinus">−200</button>
+        </div>
+        <div class="small muted">Подсчёт — ориентир. Для здоровья важнее стабильность и самочувствие.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin:0 0 10px 0; font-size: 16px;">Добавить приём</h2>
+      <div class="row">
+        <div style="min-width: 240px; flex:1;">
+          <label>Продукт</label>
+          <select id="foodSelect" style="width:100%"></select>
+        </div>
+        <div>
+          <label>Граммы</label>
+          <input id="grams" type="number" inputmode="decimal" min="1" step="1" value="100"/>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button class="primary" id="addMeal">Добавить</button>
+        </div>
+      </div>
+      <div class="small muted" style="margin-top:8px;">
+        Макросы задаются на 100 г. Калории считаются по формуле: P*4 + C*4 + F*9 (можно менять продукты под себя).
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between; align-items: baseline;">
+        <h2 style="margin:0; font-size: 16px;">Сегодняшние записи</h2>
+        <span class="small muted" id="dayStamp"></span>
+      </div>
+      <div style="overflow:auto;">
+        <table id="logTable">
+          <thead>
+            <tr>
+              <th class="nowrap">Время</th>
+              <th>Продукт</th>
+              <th class="right nowrap">Г</th>
+              <th class="right nowrap">Ккал</th>
+              <th class="right nowrap">Б</th>
+              <th class="right nowrap">Ж</th>
+              <th class="right nowrap">У</th>
+              <th class="right">Удалить</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: PRODUCTS -->
+  <div class="modal" id="productsModal" aria-hidden="true">
+    <div class="card box">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0; font-size: 16px;">Продукты (на 100 г)</h2>
+        <button class="ghost" id="closeProducts">Закрыть</button>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="row">
+        <div style="flex:1; min-width: 180px;">
+          <label>Название</label>
+          <input id="pName" placeholder="например: Творог 5%" style="width:100%"/>
+        </div>
+        <div>
+          <label>Белки (г)</label>
+          <input id="pP" type="number" step="0.1" value="0" />
+        </div>
+        <div>
+          <label>Жиры (г)</label>
+          <input id="pF" type="number" step="0.1" value="0" />
+        </div>
+        <div>
+          <label>Углеводы (г)</label>
+          <input id="pC" type="number" step="0.1" value="0" />
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button class="primary" id="addProduct">Добавить</button>
+        </div>
+      </div>
+
+      <div class="small muted" style="margin-top:10px;">
+        Совет: возьми макросы с упаковки продукта (обычно там на 100 г).
+      </div>
+
+      <div class="sep"></div>
+
+      <div style="overflow:auto;">
+        <table id="productsTable">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th class="right nowrap">Б</th>
+              <th class="right nowrap">Ж</th>
+              <th class="right nowrap">У</th>
+              <th class="right nowrap">Ккал*</th>
+              <th class="right">Действия</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="small muted" style="margin-top:8px;">
+        *Ккал считаются автоматически как P*4 + C*4 + F*9.
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPORT -->
+  <div class="modal" id="importModal" aria-hidden="true">
+    <div class="card box">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0; font-size: 16px;">Импорт / восстановление</h2>
+        <button class="ghost" id="closeImport">Закрыть</button>
+      </div>
+      <div class="sep"></div>
+      <label>Вставь JSON сюда</label>
+      <textarea id="importText" rows="10" style="width:100%;"></textarea>
+      <div class="row" style="justify-content:flex-end; margin-top:10px;">
+        <button class="primary" id="doImport">Импортировать</button>
+      </div>
+      <div class="small muted" style="margin-top:10px;">
+        Импорт заменяет текущие данные.
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ---------- Storage helpers ----------
+  const KEY = "bzu_app_v1";
+  const todayKey = () => new Date().toISOString().slice(0,10); // YYYY-MM-DD
+
+  const defaultState = () => ({
+    products: [
+      { id: crypto.randomUUID(), name: "Куриная грудка (готовая)", p: 31, f: 3.6, c: 0 },
+      { id: crypto.randomUUID(), name: "Творог 5%", p: 17, f: 5, c: 3 },
+      { id: crypto.randomUUID(), name: "Яйцо (целиком)", p: 13, f: 11, c: 1.1 },
+      { id: crypto.randomUUID(), name: "Рис варёный", p: 2.7, f: 0.3, c: 28 },
+      { id: crypto.randomUUID(), name: "Овсянка сухая", p: 13, f: 7, c: 60 },
+      { id: crypto.randomUUID(), name: "Банан", p: 1.1, f: 0.3, c: 23 }
+    ],
+    days: {
+      [todayKey()]: { log: [], waterMl: 0 }
+    }
+  });
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return defaultState();
+      const st = JSON.parse(raw);
+      // ensure today exists
+      st.days ??= {};
+      st.products ??= [];
+      st.days[todayKey()] ??= { log: [], waterMl: 0 };
+      return st;
+    } catch {
+      return defaultState();
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function kcalOf(p,f,c) { return (p*4) + (c*4) + (f*9); }
+  function round1(x) { return Math.round(x*10)/10; }
+  function round0(x) { return Math.round(x); }
+
+  let state = loadState();
+
+  // ---------- UI refs ----------
+  const foodSelect = document.getElementById("foodSelect");
+  const gramsInput = document.getElementById("grams");
+  const addMealBtn = document.getElementById("addMeal");
+
+  const totKcal = document.getElementById("totKcal");
+  const totP = document.getElementById("totP");
+  const totF = document.getElementById("totF");
+  const totC = document.getElementById("totC");
+  const totWater = document.getElementById("totWater");
+  const dayStamp = document.getElementById("dayStamp");
+
+  const logTbody = document.querySelector("#logTable tbody");
+  const productsModal = document.getElementById("productsModal");
+  const importModal = document.getElementById("importModal");
+
+  // products modal inputs
+  const pName = document.getElementById("pName");
+  const pP = document.getElementById("pP");
+  const pF = document.getElementById("pF");
+  const pC = document.getElementById("pC");
+  const addProductBtn = document.getElementById("addProduct");
+  const productsTbody = document.querySelector("#productsTable tbody");
+
+  // ---------- Render ----------
+  function ensureToday() {
+    state.days[todayKey()] ??= { log: [], waterMl: 0 };
+  }
+
+  function renderSelect() {
+    foodSelect.innerHTML = "";
+    state.products
+      .slice()
+      .sort((a,b)=>a.name.localeCompare(b.name,"ru"))
+      .forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        foodSelect.appendChild(opt);
+      });
+  }
+
+  function currentDay() {
+    ensureToday();
+    return state.days[todayKey()];
+  }
+
+  function renderTotals() {
+    const d = currentDay();
+    let P=0,F=0,C=0,K=0;
+    for (const item of d.log) {
+      P += item.p; F += item.f; C += item.c; K += item.kcal;
+    }
+    totP.textContent = `${round1(P)} г`;
+    totF.textContent = `${round1(F)} г`;
+    totC.textContent = `${round1(C)} г`;
+    totKcal.textContent = `${round0(K)}`;
+    totWater.textContent = d.waterMl;
+    dayStamp.textContent = new Date(todayKey()).toLocaleDateString("ru-RU", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+  }
+
+  function renderLog() {
+    const d = currentDay();
+    logTbody.innerHTML = "";
+    const rows = d.log.slice().sort((a,b)=>b.ts - a.ts);
+    for (const item of rows) {
+      const tr = document.createElement("tr");
+      const time = new Date(item.ts).toLocaleTimeString("ru-RU",{hour:"2-digit", minute:"2-digit"});
+      tr.innerHTML = `
+        <td class="nowrap">${time}</td>
+        <td>${escapeHtml(item.name)}</td>
+        <td class="right nowrap">${item.grams}</td>
+        <td class="right nowrap">${round0(item.kcal)}</td>
+        <td class="right nowrap">${round1(item.p)}</td>
+        <td class="right nowrap">${round1(item.f)}</td>
+        <td class="right nowrap">${round1(item.c)}</td>
+        <td class="right"><button class="ghost" data-del="${item.id}">✕</button></td>
+      `;
+      logTbody.appendChild(tr);
+    }
+  }
+
+  function renderProductsTable() {
+    productsTbody.innerHTML = "";
+    const rows = state.products.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+    for (const p of rows) {
+      const k = kcalOf(p.p, p.f, p.c);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(p.name)}</td>
+        <td class="right nowrap">${round1(p.p)}</td>
+        <td class="right nowrap">${round1(p.f)}</td>
+        <td class="right nowrap">${round1(p.c)}</td>
+        <td class="right nowrap">${round0(k)}</td>
+        <td class="right nowrap">
+          <button class="ghost" data-edit="${p.id}">Редакт.</button>
+          <button class="danger" data-rm="${p.id}">Удалить</button>
+        </td>
+      `;
+      productsTbody.appendChild(tr);
+    }
+  }
+
+  function renderAll() {
+    renderSelect();
+    renderTotals();
+    renderLog();
+    renderProductsTable();
+  }
+
+  // ---------- Actions ----------
+  addMealBtn.addEventListener("click", () => {
+    const id = foodSelect.value;
+    const grams = Number(gramsInput.value);
+    if (!id || !Number.isFinite(grams) || grams <= 0) return;
+
+    const p = state.products.find(x => x.id === id);
+    if (!p) return;
+
+    const factor = grams / 100;
+    const entry = {
+      id: crypto.randomUUID(),
+      ts: Date.now(),
+      productId: p.id,
+      name: p.name,
+      grams: round0(grams),
+      p: round1(p.p * factor),
+      f: round1(p.f * factor),
+      c: round1(p.c * factor),
+    };
+    entry.kcal = kcalOf(entry.p, entry.f, entry.c);
+
+    currentDay().log.push(entry);
+    saveState();
+    renderTotals();
+    renderLog();
+  });
+
+  logTbody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-del]");
+    if (!btn) return;
+    const id = btn.getAttribute("data-del");
+    const d = currentDay();
+    d.log = d.log.filter(x => x.id !== id);
+    saveState();
+    renderTotals();
+    renderLog();
+  });
+
+  // Water buttons
+  function addWater(delta) {
+    const d = currentDay();
+    d.waterMl = Math.max(0, (d.waterMl || 0) + delta);
+    saveState();
+    renderTotals();
+  }
+  document.getElementById("water200").onclick = () => addWater(200);
+  document.getElementById("water300").onclick = () => addWater(300);
+  document.getElementById("water500").onclick = () => addWater(500);
+  document.getElementById("waterMinus").onclick = () => addWater(-200);
+
+  // Reset day
+  document.getElementById("btnReset").addEventListener("click", () => {
+    if (!confirm("Сбросить сегодняшние записи и воду?")) return;
+    state.days[todayKey()] = { log: [], waterMl: 0 };
+    saveState();
+    renderAll();
+  });
+
+  // Products modal open/close
+  document.getElementById("btnProducts").onclick = () => { productsModal.classList.add("show"); };
+  document.getElementById("closeProducts").onclick = () => { productsModal.classList.remove("show"); };
+
+  // Add product
+  addProductBtn.addEventListener("click", () => {
+    const name = (pName.value || "").trim();
+    const P = Number(pP.value), F = Number(pF.value), C = Number(pC.value);
+    if (!name) return alert("Введите название продукта.");
+    if (![P,F,C].every(v => Number.isFinite(v) && v >= 0)) return alert("Б/Ж/У должны быть числами ≥ 0.");
+
+    state.products.push({ id: crypto.randomUUID(), name, p: P, f: F, c: C });
+    pName.value = ""; pP.value = 0; pF.value = 0; pC.value = 0;
+    saveState();
+    renderSelect();
+    renderProductsTable();
+  });
+
+  // Edit / Remove product
+  productsTbody.addEventListener("click", (e) => {
+    const rm = e.target.closest("button[data-rm]");
+    const ed = e.target.closest("button[data-edit]");
+    if (rm) {
+      const id = rm.getAttribute("data-rm");
+      const prod = state.products.find(x=>x.id===id);
+      if (!prod) return;
+      if (!confirm(`Удалить продукт: "${prod.name}"?`)) return;
+      state.products = state.products.filter(x=>x.id!==id);
+      saveState();
+      renderSelect();
+      renderProductsTable();
+      return;
+    }
+    if (ed) {
+      const id = ed.getAttribute("data-edit");
+      const prod = state.products.find(x=>x.id===id);
+      if (!prod) return;
+      const name = prompt("Название:", prod.name);
+      if (name === null) return;
+      const p = prompt("Белки (на 100 г):", String(prod.p));
+      if (p === null) return;
+      const f = prompt("Жиры (на 100 г):", String(prod.f));
+      if (f === null) return;
+      const c = prompt("Углеводы (на 100 г):", String(prod.c));
+      if (c === null) return;
+
+      const P = Number(p), F = Number(f), C = Number(c);
+      if (!name.trim()) return alert("Название не может быть пустым.");
+      if (![P,F,C].every(v => Number.isFinite(v) && v >= 0)) return alert("Б/Ж/У должны быть числами ≥ 0.");
+
+      prod.name = name.trim(); prod.p = P; prod.f = F; prod.c = C;
+      saveState();
+      renderSelect();
+      renderProductsTable();
+    }
+  });
+
+  // Export / Import
+  document.getElementById("btnExport").addEventListener("click", async () => {
+    const data = JSON.stringify(state, null, 2);
+    try {
+      await navigator.clipboard.writeText(data);
+      alert("Экспорт скопирован в буфер обмена (JSON).");
+    } catch {
+      alert("Не удалось скопировать. Открой импорт и вставь вручную.");
+    }
+  });
+
+  document.getElementById("btnImport").addEventListener("click", () => {
+    document.getElementById("importText").value = "";
+    importModal.classList.add("show");
+  });
+  document.getElementById("closeImport").addEventListener("click", () => importModal.classList.remove("show"));
+
+  document.getElementById("doImport").addEventListener("click", () => {
+    const txt = document.getElementById("importText").value.trim();
+    if (!txt) return alert("Вставь JSON.");
+    try {
+      const parsed = JSON.parse(txt);
+      if (!parsed || typeof parsed !== "object") throw new Error("bad");
+      state = parsed;
+      ensureToday();
+      saveState();
+      importModal.classList.remove("show");
+      renderAll();
+      alert("Импорт выполнен.");
+    } catch {
+      alert("Ошибка импорта: неверный JSON.");
+    }
+  });
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  // init
+  renderAll();
+</script>
+</body>
+</html>
