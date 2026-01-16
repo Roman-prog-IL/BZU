@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Калории — Мой Трекер</title>
+  <title>Калории — Смарт Трекер</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --mut: #94a3b8;
@@ -11,14 +11,15 @@
       --c-f: #facc15; --c-c: #4ade80; --c-water: #0ea5e9; --c-bad: #ef4444;  
     }
     * { box-sizing: border-box; transition: all 0.2s ease; }
-    body { margin: 0; font-family: 'Segoe UI', system-ui; background: var(--bg); color: var(--text); padding-bottom: 120px; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui; background: var(--bg); color: var(--text); padding-bottom: 140px; }
     .wrap { max-width: 800px; margin: 0 auto; padding: 20px; }
     
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .k { border-radius: 20px; padding: 15px; border: 1px solid var(--bd); background: var(--card); }
     .v { font-size: 24px; font-weight: 800; }
-    
+    .goal-in { width: 50px; background: rgba(0,0,0,0.2); border: 1px solid var(--bd); color: #fff; font-size: 11px; text-align: center; border-radius: 5px; }
+
     .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid var(--bd); margin-bottom: 15px; }
     .inp, select { width: 100%; background: #0f172a; border: 1px solid var(--bd); color: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 14px; }
     
@@ -33,7 +34,9 @@
 
     .item { background: rgba(255,255,255,0.02); padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--bd); margin-bottom: 8px; }
     
-    .historyBar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); padding: 15px; border-top: 1px solid var(--bd); }
+    .advice-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px dashed var(--c-kcal); border-radius: 20px; padding: 15px; margin-bottom: 15px; display: none; }
+
+    .historyBar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); padding: 15px; border-top: 1px solid var(--bd); z-index: 100; }
     .historyInner { max-width: 800px; margin: 0 auto; display: flex; gap: 10px; }
   </style>
 </head>
@@ -46,10 +49,27 @@
   </div>
 
   <div class="kpi">
-    <div class="k" style="border-left: 4px solid var(--c-kcal)"> <div class="v" id="kcal">0</div><div style="font-size:10px">ККАЛ</div> </div>
-    <div class="k" style="border-left: 4px solid var(--c-p)"> <div class="v" id="p">0</div><div style="font-size:10px">БЕЛКИ</div> </div>
-    <div class="k" style="border-left: 4px solid var(--c-f)"> <div class="v" id="f">0</div><div style="font-size:10px">ЖИРЫ</div> </div>
-    <div class="k" style="border-left: 4px solid var(--c-c)"> <div class="v" id="c">0</div><div style="font-size:10px">УГЛЕВОДЫ</div> </div>
+    <div class="k" style="border-left: 4px solid var(--c-kcal)"> 
+       <div style="display:flex; justify-content:space-between"> <div class="v" id="kcal">0</div> <input class="goal-in" id="gK" type="number" placeholder="цель"> </div>
+       <div style="font-size:10px">ККАЛ</div> 
+    </div>
+    <div class="k" style="border-left: 4px solid var(--c-p)"> 
+       <div style="display:flex; justify-content:space-between"> <div class="v" id="p">0</div> <input class="goal-in" id="gP" type="number"> </div>
+       <div style="font-size:10px">БЕЛКИ</div> 
+    </div>
+    <div class="k" style="border-left: 4px solid var(--c-f)"> 
+       <div style="display:flex; justify-content:space-between"> <div class="v" id="f">0</div> <input class="goal-in" id="gF" type="number"> </div>
+       <div style="font-size:10px">ЖИРЫ</div> 
+    </div>
+    <div class="k" style="border-left: 4px solid var(--c-c)"> 
+       <div style="display:flex; justify-content:space-between"> <div class="v" id="c">0</div> <input class="goal-in" id="gC" type="number"> </div>
+       <div style="font-size:10px">УГЛЕВОДЫ</div> 
+    </div>
+  </div>
+
+  <div id="advice" class="advice-card">
+    <div style="color: var(--c-kcal); font-size: 12px; font-weight: bold; margin-bottom: 5px;">💡 СОВЕТ ДНЯ:</div>
+    <div id="adviceText" style="font-size: 14px; line-height: 1.4;"></div>
   </div>
 
   <div class="param-grid">
@@ -71,7 +91,6 @@
     </div>
     <input class="inp" id="foodSearch" placeholder="Поиск..." oninput="rebuildSelect(this.value)">
     <select id="foodSelect"></select>
-    
     <div style="display:flex; gap:10px">
       <input class="inp" id="grams" type="number" value="100" style="width:100px">
       <button class="btn ok" style="flex:1" onclick="addToDiary()">В ДНЕВНИК</button>
@@ -100,13 +119,15 @@
 
 <script>
   const $ = (id) => document.getElementById(id);
-  let state = JSON.parse(localStorage.getItem('cal_state_v6') || '{"days":{}}');
-  let FOODS = JSON.parse(localStorage.getItem('cal_foods_v6') || '[]');
+  let state = JSON.parse(localStorage.getItem('cal_v7_state') || '{"days":{}}');
+  let FOODS = JSON.parse(localStorage.getItem('cal_v7_foods') || '[]');
+  let goals = JSON.parse(localStorage.getItem('cal_v7_goals') || '{"k":2000,"p":150,"f":70,"c":200}');
   let currentKey = new Date().toISOString().split('T')[0];
 
   function save() {
-    localStorage.setItem('cal_state_v6', JSON.stringify(state));
-    localStorage.setItem('cal_foods_v6', JSON.stringify(FOODS));
+    localStorage.setItem('cal_v7_state', JSON.stringify(state));
+    localStorage.setItem('cal_v7_foods', JSON.stringify(FOODS));
+    localStorage.setItem('cal_v7_goals', JSON.stringify(goals));
     updateUI();
   }
 
@@ -128,9 +149,10 @@
     $('f').textContent = Math.round(t.f);
     $('c').textContent = Math.round(t.c);
     $('waterDisp').textContent = (day.water || 0).toFixed(1);
-    $('weight').value = day.weight || "";
-    $('workout').value = day.workout || "";
     
+    // Обновляем рекомендации
+    giveAdvice(t);
+
     const list = $('list'); list.innerHTML = "";
     day.items.forEach((it, i) => {
       const div = document.createElement('div'); div.className = 'item';
@@ -141,36 +163,53 @@
     $('dateText').textContent = new Date(currentKey).toLocaleDateString('ru-RU', {day:'numeric', month:'short'});
   }
 
-  // РАБОТА С БАЗОЙ
+  function giveAdvice(current) {
+    if (FOODS.length === 0) return;
+    
+    const defP = goals.p - current.p;
+    const defF = goals.f - current.f;
+    const defC = goals.c - current.c;
+
+    let bestFood = null;
+    let message = "";
+
+    if (defP > 20) {
+      bestFood = FOODS.reduce((prev, curr) => (prev.p > curr.p) ? prev : curr);
+      message = `Тебе не хватает белков (еще ${Math.round(defP)}г). Как насчет <b>${bestFood.name}</b>?`;
+    } else if (defC > 30) {
+      bestFood = FOODS.reduce((prev, curr) => (prev.c > curr.c) ? prev : curr);
+      message = `Нужно больше энергии! Добавь углеводов, например <b>${bestFood.name}</b>.`;
+    } else if (defF > 15) {
+      bestFood = FOODS.reduce((prev, curr) => (prev.f > curr.f) ? prev : curr);
+      message = `Маловато жиров. <b>${bestFood.name}</b> отлично подойдет сейчас.`;
+    }
+
+    if (message && (defP > 10 || defF > 10 || defC > 10)) {
+      $('advice').style.display = 'block';
+      $('adviceText').innerHTML = message;
+    } else {
+      $('advice').style.display = 'none';
+    }
+  }
+
   window.addNewProduct = () => {
-    const name = prompt("Название продукта:"); if(!name) return;
-    const kcal = +prompt("Калории на 100г:");
-    const p = +prompt("Белки на 100г:");
-    const f = +prompt("Жиры на 100г:");
-    const c = +prompt("Углеводы на 100г:");
-    FOODS.push({ name, kcal, p, f, c });
+    const name = prompt("Название:"); if(!name) return;
+    FOODS.push({ name, kcal: +prompt("Ккал:"), p: +prompt("Б:"), f: +prompt("Ж:"), c: +prompt("У:") });
     save(); rebuildSelect();
   };
 
   window.deleteSelectedFromBase = () => {
     const val = $('foodSelect').value;
-    if(!val) return;
-    if(confirm(`Удалить "${val}" из базы навсегда?`)) {
-      FOODS = FOODS.filter(x => x.name !== val);
-      save(); rebuildSelect();
-    }
+    if(val && confirm("Удалить из базы?")) { FOODS = FOODS.filter(x => x.name !== val); save(); rebuildSelect(); }
   };
 
   function rebuildSelect(f="") {
     const sel = $('foodSelect'); sel.innerHTML = "";
-    const filtered = FOODS.filter(x => x.name.toLowerCase().includes(f.toLowerCase()));
-    filtered.forEach(x => {
+    FOODS.filter(x => x.name.toLowerCase().includes(f.toLowerCase())).forEach(x => {
       const o = document.createElement('option'); o.value = x.name; o.textContent = x.name; sel.appendChild(o);
     });
-    $('delBaseBtn').style.display = filtered.length ? 'block' : 'none';
   }
 
-  // ДНЕВНИК
   window.addToDiary = () => {
     const f = FOODS.find(x => x.name === $('foodSelect').value);
     if(f) { getDay().items.unshift({ name: f.name, grams: +$('grams').value, p100: f }); save(); }
@@ -178,19 +217,16 @@
 
   window.removeFromDiary = (i) => { getDay().items.splice(i,1); save(); };
   window.addWater = (v) => { getDay().water = (getDay().water || 0) + v; save(); };
-  window.clearDay = () => { if(confirm("Очистить день?")) { state.days[currentKey] = { items: [], water:0 }; save(); }};
+  window.clearDay = () => { if(confirm("Очистить?")) { state.days[currentKey] = { items: [], water:0 }; save(); }};
 
-  $('weight').oninput = (e) => { getDay().weight = e.target.value; save(); };
-  $('workout').oninput = (e) => { getDay().workout = e.target.value; save(); };
+  // Цели
+  ['K','P','F','C'].forEach(l => {
+    const el = $('g'+l); el.value = goals[l.toLowerCase()];
+    el.oninput = (e) => { goals[l.toLowerCase()] = e.target.value; save(); };
+  });
+
   $('dayPicker').onchange = (e) => { currentKey = e.target.value; updateUI(); };
-  
-  function changeDay(d) {
-    let dt = new Date(currentKey); dt.setDate(dt.getDate() + d);
-    currentKey = dt.toISOString().split('T')[0]; $('dayPicker').value = currentKey; updateUI();
-  }
-  function goToday() {
-    currentKey = new Date().toISOString().split('T')[0]; $('dayPicker').value = currentKey; updateUI();
-  }
+  function goToday() { currentKey = new Date().toISOString().split('T')[0]; $('dayPicker').value = currentKey; updateUI(); }
 
   $('dayPicker').value = currentKey;
   rebuildSelect();
