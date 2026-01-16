@@ -117,7 +117,7 @@
       </div>
 
       <div class="row" style="margin-bottom:8px">
-        <input class="inp" id="foodSearch" placeholder="поиск: яйцо, курица, творог..." />
+        <input class="inp" id="foodSearch" placeholder="поиск по твоим продуктам..." />
       </div>
 
       <div class="row">
@@ -131,11 +131,11 @@
         </div>
         <div style="display:flex;gap:8px;align-items:flex-end">
           <button class="btn ok" id="addBtn">добавить</button>
-          <button class="btn" id="customBtn">свой</button>
+          <button class="btn" id="customBtn">добавить в базу</button>
         </div>
       </div>
 
-      <div class="hint" id="selInfo">—</div>
+      <div class="hint" id="selInfo">сначала добавь продукты в базу кнопкой “добавить в базу”</div>
 
       <div class="list" id="list"></div>
 
@@ -151,38 +151,6 @@
     <div class="rightCol">
       <div class="card">
         <div class="sectionTitle">
-          <h3>Цели (необязательно)</h3>
-          <span class="mini">для контроля</span>
-        </div>
-        <div class="two">
-          <div>
-            <div class="mini">Ккал цель</div>
-            <input class="inp" id="goalKcal" type="number" step="1" placeholder="например 1600">
-          </div>
-          <div>
-            <div class="mini">Вода цель (л)</div>
-            <input class="inp" id="goalWater" type="number" step="0.1" placeholder="например 2.5">
-          </div>
-        </div>
-        <div class="two" style="margin-top:10px">
-          <div>
-            <div class="mini">Белки цель (г)</div>
-            <input class="inp" id="goalP" type="number" step="1" placeholder="например 140">
-          </div>
-          <div>
-            <div class="mini">Жиры цель (г)</div>
-            <input class="inp" id="goalF" type="number" step="1" placeholder="например 60">
-          </div>
-        </div>
-        <div style="margin-top:10px">
-          <div class="mini">Углеводы цель (г)</div>
-          <input class="inp" id="goalC" type="number" step="1" placeholder="например 120">
-        </div>
-        <div class="hint">если цели пустые — просто считаем факт за день</div>
-      </div>
-
-      <div class="card">
-        <div class="sectionTitle">
           <h3>Быстро</h3>
           <span class="mini">сохранение авто</span>
         </div>
@@ -190,7 +158,7 @@
           <button class="btn" id="copyTotals">скопировать итоги</button>
           <button class="btn bad" id="resetAll">сбросить всё</button>
         </div>
-        <div class="hint">“сбросить всё” удалит данные и по дням тоже</div>
+        <div class="hint">“сбросить всё” удалит данные и твои продукты тоже</div>
       </div>
     </div>
   </div>
@@ -198,29 +166,8 @@
 
 <script>
 (() => {
-  // ======= ПРОДУКТЫ (на 100г) =======
-  const DEFAULT_FOODS = [
-    ["Творог 5%",          121, 17.0, 5.0, 3.0],
-    ["Творог 0-1%",         80, 18.0, 1.0, 3.0],
-    ["Яйцо варёное",       155, 13.0,11.0, 1.1],
-    ["Куриная грудка",     165, 31.0, 3.6, 0.0],
-    ["Говядина постная",   187, 26.0, 9.0, 0.0],
-    ["Тунец (в воде)",     116, 26.0, 1.0, 0.0],
-    ["Йогурт натуральный",  60,  4.0, 3.0, 5.0],
-    ["Овсянка сухая",      370, 13.0, 7.0, 62.0],
-    ["Рис варёный",        130,  2.7,0.3, 28.0],
-    ["Гречка варёная",     110,  3.6,1.1, 20.0],
-    ["Картофель варёный",   77,  2.0,0.1, 17.0],
-    ["Огурец",              15,  0.7,0.1, 3.6],
-    ["Помидор",             18,  0.9,0.2, 3.9],
-    ["Морковь",             41,  0.9,0.2, 9.6],
-    ["Яблоко",              52,  0.3,0.2, 14.0],
-    ["Мандарин",            53,  0.8,0.3, 13.0],
-    ["Банан",               89,  1.1,0.3, 23.0],
-    ["Тхина (паста)",      595, 17.0,53.0, 12.0],
-    ["Орехи (смесь)",      610, 15.0,55.0, 16.0],
-    ["Хлеб",               250,  8.0,3.0, 49.0],
-  ].map(([name,kcal,p,f,c]) => ({name,kcal,p,f,c}));
+  // ======= ПУСТАЯ БАЗА (только твои продукты) =======
+  const DEFAULT_FOODS = []; // <-- пусто
 
   const CUSTOM_FOODS_KEY = "kcal_tracker_custom_foods_v1";
 
@@ -256,8 +203,7 @@
   // ======= ХРАНЕНИЕ ДНЕЙ =======
   const KEY = "kcal_tracker_v1";
   const state = {
-    days: {}, // dayKey: { items: [{name, grams, per100:{kcal,p,f,c}}], waterL, weight }
-    goals: {kcal:"", water:"", p:"", f:"", c:""}
+    days: {} // dayKey: { items: [{name, grams, per100:{kcal,p,f,c}}], waterL, weight }
   };
 
   function load() {
@@ -269,7 +215,6 @@
       }
     }catch(e){}
     ensureDay();
-    renderGoalsInputs();
     render();
   }
 
@@ -300,10 +245,7 @@
     if(!state.days[k]) state.days[k] = { items: [], waterL: 0, weight: "" };
     return k;
   }
-
-  function day() {
-    return state.days[ensureDay()];
-  }
+  function day() { return state.days[ensureDay()]; }
 
   // ======= СЧЁТ =======
   function totals() {
@@ -319,7 +261,6 @@
     }
     return {kcal,p,f,c};
   }
-
   function setKpis() {
     const t = totals();
     $("kcal").textContent = Math.round(t.kcal);
@@ -340,6 +281,7 @@
   function rebuildSelect(filter="") {
     const f = filter.trim().toLowerCase();
     foodSelect.innerHTML = "";
+
     const filtered = FOODS
       .slice()
       .sort((a,b) => a.name.localeCompare(b.name, "ru"))
@@ -351,18 +293,23 @@
       opt.textContent = x.name;
       foodSelect.appendChild(opt);
     }
+
     foodsCount.textContent = String(filtered.length);
-    if(filtered.length) foodSelect.value = filtered[0].name;
-    updateSelInfo();
+
+    if(filtered.length){
+      foodSelect.value = filtered[0].name;
+      updateSelInfo();
+    } else {
+      selInfo.textContent = "база пустая — нажми “добавить в базу” и создай свои продукты";
+    }
   }
 
   function getFoodByName(name){
     return FOODS.find(x => x.name === name);
   }
-
   function updateSelInfo() {
     const f = getFoodByName(foodSelect.value);
-    if(!f){ selInfo.textContent = "—"; return; }
+    if(!f){ return; }
     selInfo.textContent = `на 100г: ${f.kcal} ккал • Б ${f.p} • Ж ${f.f} • У ${f.c}`;
   }
 
@@ -421,7 +368,13 @@
   }
 
   // ======= ДЕЙСТВИЯ =======
+
+  // Добавить выбранный продукт в день
   $("addBtn").addEventListener("click", () => {
+    if(!FOODS.length){
+      alert("Сначала добавь продукты в базу кнопкой “добавить в базу”.");
+      return;
+    }
     const name = foodSelect.value;
     const g = Math.max(1, Math.round(Number(gramsInp.value)||0));
     const f = getFoodByName(name);
@@ -429,7 +382,7 @@
     addFoodToDay(f.name, g, {kcal:f.kcal, p:f.p, f:f.f, c:f.c});
   });
 
-  // ВАЖНО: "СВОЙ" теперь сохраняется в базе и появляется в списке навсегда
+  // Добавить новый продукт в базу (сохранится навсегда)
   $("customBtn").addEventListener("click", () => {
     const name = (prompt("Название продукта:") || "").trim();
     if(!name) return;
@@ -439,19 +392,16 @@
     const f = Number(prompt("Жиры на 100г:", "0")) || 0;
     const c = Number(prompt("Углеводы на 100г:", "0")) || 0;
 
-    // если такого названия нет — добавляем в кастом
     const exists = FOODS.some(x => x.name.toLowerCase() === name.toLowerCase());
     if(!exists){
       const custom = loadCustomFoods();
       custom.push({name, kcal, p, f, c});
       saveCustomFoods(custom);
-
       FOODS = [...DEFAULT_FOODS, ...custom];
       rebuildSelect($("foodSearch").value);
-      foodSelect.value = name;
-      updateSelInfo();
     }
 
+    // после добавления в базу — сразу можно добавить в день
     const g = Math.max(1, Math.round(Number(gramsInp.value)||100));
     addFoodToDay(name, g, {kcal, p, f, c});
   });
@@ -459,6 +409,7 @@
   foodSelect.addEventListener("change", updateSelInfo);
   foodSearch.addEventListener("input", (e) => rebuildSelect(e.target.value));
 
+  // Редактирование / удаление в списке дня
   listEl.addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if(!b) return;
@@ -528,22 +479,6 @@
     }
   });
 
-  // Цели
-  function renderGoalsInputs(){
-    $("goalKcal").value  = state.goals.kcal ?? "";
-    $("goalWater").value = state.goals.water ?? "";
-    $("goalP").value     = state.goals.p ?? "";
-    $("goalF").value     = state.goals.f ?? "";
-    $("goalC").value     = state.goals.c ?? "";
-  }
-  ["goalKcal","goalWater","goalP","goalF","goalC"].forEach(id => {
-    $(id).addEventListener("input", (e) => {
-      const map = {goalKcal:"kcal", goalWater:"water", goalP:"p", goalF:"f", goalC:"c"};
-      state.goals[map[id]] = e.target.value;
-      saveSoon();
-    });
-  });
-
   // Копировать итоги
   $("copyTotals").addEventListener("click", async () => {
     const t = totals();
@@ -559,7 +494,7 @@
 
   // Сбросить всё
   $("resetAll").addEventListener("click", () => {
-    if(!confirm("Точно удалить все данные (все дни и свои продукты тоже)?")) return;
+    if(!confirm("Точно удалить все данные (все дни и твою базу продуктов)?")) return;
     localStorage.removeItem(KEY);
     localStorage.removeItem(CUSTOM_FOODS_KEY);
     location.reload();
