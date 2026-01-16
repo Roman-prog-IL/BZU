@@ -3,157 +3,102 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Калории / БЖУ — Твой Трекер</title>
+  <title>Трекер БЖУ — Полный Контроль</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --text: #f8fafc;
-      --mut: #94a3b8;
-      --bd: rgba(255, 255, 255, 0.06);
-      --c-kcal: #38bdf8; 
-      --c-p: #fb923c;    
-      --c-f: #facc15;    
-      --c-c: #4ade80;    
-      --c-water: #0ea5e9;
-      --c-bad: #ef4444;  
+      --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --mut: #94a3b8;
+      --bd: rgba(255, 255, 255, 0.06); --c-kcal: #38bdf8; --c-p: #fb923c;    
+      --c-f: #facc15; --c-c: #4ade80; --c-water: #0ea5e9; --c-bad: #ef4444;  
     }
     * { box-sizing: border-box; transition: all 0.2s ease; }
-    body { margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding-bottom: 120px; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui; background: var(--bg); color: var(--text); padding-bottom: 120px; }
     .wrap { max-width: 900px; margin: 0 auto; padding: 20px; }
-    
     .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .date-box h2 { margin: 0; font-size: 1.4rem; color: #fff; }
-    .pill { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--bd); font-size: 11px; color: var(--mut); background: rgba(255,255,255,0.02); }
-
     .kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .k { position: relative; border-radius: 24px; padding: 20px; border: 1px solid var(--bd); background: var(--card); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
+    .k { position: relative; border-radius: 24px; padding: 20px; border: 1px solid var(--bd); background: var(--card); display: flex; flex-direction: column; justify-content: space-between; }
     .k::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 4px 0 0 4px; }
-    
-    .k.kcal::before { background: var(--c-kcal); } .k.kcal .v { color: var(--c-kcal); }
-    .k.p::before { background: var(--c-p); }    .k.p .v { color: var(--c-p); }
-    .k.f::before { background: var(--c-f); }    .k.f .v { color: var(--c-f); }
-    .k.c::before { background: var(--c-c); }    .k.c .v { color: var(--c-c); }
-
-    .kHead { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .k.kcal::before { background: var(--c-kcal); } .k.p::before { background: var(--c-p); } 
+    .k.f::before { background: var(--c-f); } .k.c::before { background: var(--c-c); }
     .v { font-size: 32px; font-weight: 800; line-height: 1; }
-    .l { font-size: 11px; color: var(--mut); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    .goalWrap { text-align: right; }
-    .goalLbl { font-size: 9px; color: var(--mut); margin-bottom: 4px; text-transform: uppercase; }
-    .goalInp { width: 65px; background: rgba(0,0,0,0.3); border: 1px solid var(--bd); border-radius: 8px; color: #fff; padding: 5px; font-size: 12px; text-align: center; font-weight: bold; }
-    .goalNote { font-size: 12px; margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--bd); font-weight: 600; }
-
+    .goalInp { width: 65px; background: rgba(0,0,0,0.3); border: 1px solid var(--bd); border-radius: 8px; color: #fff; padding: 5px; font-size: 12px; text-align: center; }
     .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid var(--bd); margin-bottom: 15px; }
-    h3 { margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: var(--mut); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-    
     .param-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
-    .param-card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid var(--bd); display: flex; flex-direction: column; align-items: center; text-align: center; }
-
-    .inp, select { width: 100%; background: #0f172a; border: 1px solid var(--bd); color: #fff; border-radius: 12px; padding: 12px; font-size: 14px; text-align: center; }
-    .inp:focus { border-color: var(--c-kcal); outline: none; background: #111b2d; }
-    
-    .btn { padding: 12px 16px; border-radius: 12px; border: 1px solid var(--bd); background: #334155; color: #fff; font-weight: 700; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; width: 100%; }
-    .btn:active { transform: scale(0.96); }
+    .param-card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid var(--bd); text-align: center; }
+    .inp, select { width: 100%; background: #0f172a; border: 1px solid var(--bd); color: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .btn { padding: 12px; border-radius: 12px; border: 1px solid var(--bd); background: #334155; color: #fff; font-weight: 700; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; }
     .btn.ok { background: #059669; border-color: #10b981; }
     .btn.acc { background: #0284c7; border-color: #0ea5e9; }
     .btn.bad { background: rgba(239, 68, 68, 0.1); color: var(--c-bad); border-color: rgba(239, 68, 68, 0.2); }
-
-    .water-display { font-size: 24px; font-weight: 800; color: var(--c-water); margin-bottom: 10px; }
-    .water-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-
-    /* Продукт в списке */
-    .item { background: rgba(255,255,255,0.02); padding: 14px 18px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--bd); margin-bottom: 10px; }
-    .item-info { flex: 1; }
-    .item .name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-    .item .sub { font-size: 12px; color: var(--mut); font-weight: 500; }
-    .item-actions { display: flex; gap: 8px; margin-left: 15px; }
-    .btn-edit { background: rgba(56, 189, 248, 0.1); color: var(--c-kcal); border: 1px solid rgba(56, 189, 248, 0.2); width: 40px; height: 40px; border-radius: 10px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-    /* Навигация */
+    .item { background: rgba(255,255,255,0.02); padding: 12px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--bd); margin-bottom: 8px; }
     .historyBar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px); padding: 15px; border-top: 1px solid var(--bd); z-index: 100; }
-    .historyInner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: 10px; align-items: center; }
-
-    @media (max-width: 600px) {
-      .param-grid { grid-template-columns: 1fr; }
-      .historyInner { grid-template-columns: 1fr 1fr 1fr; }
-      .historyInner input { grid-column: span 3; }
-    }
+    .historyInner { max-width: 900px; margin: 0 auto; display: flex; gap: 10px; }
+    .edit-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .edit-grid input { padding: 8px; font-size: 12px; margin: 0; }
+    @media (max-width: 600px) { .param-grid { grid-template-columns: 1fr; } .edit-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body>
 
 <div class="wrap">
   <div class="top">
-    <div class="date-box">
-      <h2 id="dateText">...</h2>
-      <div style="font-size: 11px; color: var(--mut); font-weight: bold; margin-top: 4px" id="dayKeyText"></div>
-    </div>
-    <div class="pill" id="saveState">● ОБЛАКО СИНК</div>
+    <h2 id="dateText">...</h2>
+    <div class="pill" id="dayKeyText"></div>
   </div>
 
   <div class="kpi">
-    <div class="k kcal"><div class="kHead"><div><div class="v" id="kcal">0</div><div class="l">Энергия</div></div><div class="goalWrap"><div class="goalLbl">Цель</div><input class="goalInp" id="goalK" type="number"></div></div><div class="goalNote" id="kcalNote">—</div></div>
-    <div class="k p"><div class="kHead"><div><div class="v" id="p">0</div><div class="l">Белки</div></div><div class="goalWrap"><div class="goalLbl">Цель</div><input class="goalInp" id="goalP" type="number"></div></div><div class="goalNote" id="noteP">—</div></div>
-    <div class="k f"><div class="kHead"><div><div class="v" id="f">0</div><div class="l">Жиры</div></div><div class="goalWrap"><div class="goalLbl">Цель</div><input class="goalInp" id="goalF" type="number"></div></div><div class="goalNote" id="noteF">—</div></div>
-    <div class="k c"><div class="kHead"><div><div class="v" id="c">0</div><div class="l">Углеводы</div></div><div class="goalWrap"><div class="goalLbl">Цель</div><input class="goalInp" id="goalC" type="number"></div></div><div class="goalNote" id="noteC">—</div></div>
+    <div class="k kcal"><div style="display:flex;justify-content:space-between"><div><div class="v" id="kcal">0</div><div style="font-size:11px;color:var(--mut)">ККАЛ</div></div><input class="goalInp" id="goalK" type="number" placeholder="Цель"></div><div id="kcalNote" style="font-size:12px;margin-top:10px"></div></div>
+    <div class="k p"><div style="display:flex;justify-content:space-between"><div><div class="v" id="p">0</div><div style="font-size:11px;color:var(--mut)">БЕЛКИ</div></div><input class="goalInp" id="goalP" type="number"></div><div id="noteP" style="font-size:12px;margin-top:10px"></div></div>
+    <div class="k f"><div style="display:flex;justify-content:space-between"><div><div class="v" id="f">0</div><div style="font-size:11px;color:var(--mut)">ЖИРЫ</div></div><input class="goalInp" id="goalF" type="number"></div><div id="noteF" style="font-size:12px;margin-top:10px"></div></div>
+    <div class="k c"><div style="display:flex;justify-content:space-between"><div><div class="v" id="c">0</div><div style="font-size:11px;color:var(--mut)">УГЛЕВОДЫ</div></div><input class="goalInp" id="goalC" type="number"></div><div id="noteC" style="font-size:12px;margin-top:10px"></div></div>
   </div>
 
   <div class="param-grid">
-    <div class="param-card"><h3>⚖️ Вес</h3><input class="inp" id="weight" type="number" step="0.1" placeholder="0.0"></div>
-    <div class="param-card"><h3>🔥 Трен</h3><input class="inp" id="workout" type="number" placeholder="0"></div>
-    <div class="param-card">
-      <h3>💧 Вода</h3>
-      <div class="water-display"><span id="waterDisp">0</span> <small style="font-size: 12px">л</small></div>
-      <div class="water-row"><button class="btn acc" onclick="addWater(0.1)">+100</button><button class="btn acc" onclick="addWater(0.3)">+300</button></div>
-      <button class="btn bad" style="margin-top: 8px; padding: 6px;" onclick="resetWater()">Сброс</button>
-    </div>
+    <div class="param-card"><h3>⚖️ Вес</h3><input class="inp" id="weight" type="number" step="0.1"></div>
+    <div class="param-card"><h3>🔥 Трен</h3><input class="inp" id="workout" type="number"></div>
+    <div class="param-card"><h3>💧 <span id="waterDisp">0</span>л</h3><div style="display:flex;gap:5px"><button class="btn acc" onclick="addWater(0.1)">+100</button><button class="btn acc" onclick="addWater(0.3)">+300</button></div></div>
   </div>
 
-  <div class="card" id="inputSection">
-    <h3>🍎 Добавить еду</h3>
-    <input class="inp" id="foodSearch" style="text-align: left" placeholder="Поиск в твоей базе..." oninput="rebuildSelect(this.value)">
+  <div class="card">
+    <h3>🍎 Добавить прием пищи</h3>
+    <input class="inp" id="foodSearch" placeholder="Поиск в базе..." oninput="rebuildSelect(this.value)">
     <select id="foodSelect" onchange="updateSelInfo()"></select>
-    <div id="selInfo" style="font-size: 11px; color: var(--mut); margin: -5px 0 15px 5px;"></div>
-    
-    <div style="display: flex; gap: 12px;">
-      <div style="width: 120px"><div style="font-size: 10px; color: var(--mut); margin-bottom: 4px; text-align: center">ГРАММЫ</div><input class="inp" id="grams" type="number" value="100"></div>
-      <div style="flex: 1; display: flex; align-items: flex-end; gap: 10px;">
-        <button class="btn ok" id="addBtn">В ДНЕВНИК</button>
-        <button class="btn acc" id="customBtn" style="width: 60px">+</button>
-      </div>
+    <div style="display:flex;gap:10px">
+      <input class="inp" id="grams" type="number" value="100" style="width:100px">
+      <button class="btn ok" id="addBtn">В ДНЕВНИК</button>
     </div>
   </div>
 
   <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px">
-       <h3 style="margin:0">📝 Дневник</h3>
-       <button class="btn bad" style="width: auto; padding: 6px 12px; font-size: 11px" onclick="clearDay()">Очистить</button>
-    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:15px"><h3>📝 Дневник</h3><button class="btn bad" style="width:auto;padding:5px 15px" onclick="clearDay()">Очистить</button></div>
     <div id="list"></div>
+  </div>
+
+  <div class="card" style="border-color: var(--c-kcal)">
+    <h3>⚙️ Управление базой продуктов</h3>
+    <div style="font-size:12px; color:var(--mut); margin-bottom:10px">Здесь можно изменить или удалить продукты навсегда из общего списка</div>
+    <div id="baseList"></div>
+    <button class="btn acc" style="margin-top:10px" onclick="addNewToBase()">+ Добавить новый продукт в базу</button>
   </div>
 </div>
 
 <div class="historyBar">
   <div class="historyInner">
-    <input class="inp" id="dayPicker" type="date">
-    <button class="btn" onclick="changeDay(-1)">◀</button>
-    <button class="btn" onclick="changeDay(1)">▶</button>
+    <input class="inp" id="dayPicker" type="date" style="margin:0">
     <button class="btn acc" onclick="goToday()">СЕГОДНЯ</button>
   </div>
 </div>
 
 <script>
   const $ = (id) => document.getElementById(id);
-  let state = JSON.parse(localStorage.getItem('state_v4') || '{"days":{}}');
-  let FOODS = JSON.parse(localStorage.getItem('foods_v4') || '[]');
-  let goals = JSON.parse(localStorage.getItem('goals_v4') || '{"k":1900,"p":145,"f":75,"c":170}');
+  let state = JSON.parse(localStorage.getItem('state_v5') || '{"days":{}}');
+  let FOODS = JSON.parse(localStorage.getItem('foods_v5') || '[]');
+  let goals = JSON.parse(localStorage.getItem('goals_v5') || '{"k":1900,"p":145,"f":75,"c":170}');
   let currentKey = new Date().toISOString().split('T')[0];
 
   function save() {
-    localStorage.setItem('state_v4', JSON.stringify(state));
-    localStorage.setItem('foods_v4', JSON.stringify(FOODS));
-    localStorage.setItem('goals_v4', JSON.stringify(goals));
+    localStorage.setItem('state_v5', JSON.stringify(state));
+    localStorage.setItem('foods_v5', JSON.stringify(FOODS));
+    localStorage.setItem('goals_v5', JSON.stringify(goals));
     updateUI();
   }
 
@@ -175,78 +120,75 @@
     $('f').textContent = Math.round(t.f);
     $('c').textContent = Math.round(t.c);
     $('waterDisp').textContent = (day.water || 0).toFixed(1);
-    $('weight').value = day.weight || "";
-    $('workout').value = day.workoutKcal || "";
-
+    
     const net = Math.round(t.kcal - (day.workoutKcal || 0));
-    const remK = goals.k - net;
-    $('kcalNote').textContent = remK > 0 ? `Осталось: ${remK} ккал` : `Перебор: ${Math.abs(remK)}`;
-    $('kcalNote').style.color = remK > 0 ? 'var(--c-c)' : 'var(--c-bad)';
-
-    const goalStr = (v, g) => {
-      if(!g) return "Цель не задана";
-      const d = g - v;
-      return d > 0 ? `Еще ${Math.round(d)}г` : `Перебор ${Math.round(Math.abs(d))}г`;
-    };
-    $('noteP').textContent = goalStr(t.p, goals.p);
-    $('noteF').textContent = goalStr(t.f, goals.f);
-    $('noteC').textContent = goalStr(t.c, goals.c);
-
+    $('kcalNote').textContent = `Остаток: ${goals.k - net} ккал`;
+    $('noteP').textContent = `Осталось: ${Math.round(goals.p - t.p)}г`;
+    
+    // Дневник
     const list = $('list'); list.innerHTML = "";
     day.items.forEach((it, i) => {
       const div = document.createElement('div'); div.className = 'item';
-      div.innerHTML = `
-        <div class="item-info">
-          <div class="name">${it.name}</div>
-          <div class="sub">${it.grams}г • ${Math.round(it.p100.kcal*it.grams/100)} ккал • Б${Math.round(it.p100.p*it.grams/100)}</div>
-        </div>
-        <div class="item-actions">
-          <button class="btn-edit" onclick="editItem(${i})" title="Изменить">✎</button>
-          <button class="btn bad" style="width:40px; height:40px; border-radius:10px" onclick="removeItem(${i})">×</button>
-        </div>`;
+      div.innerHTML = `<div><b>${it.name}</b><br><small>${it.grams}г • ${Math.round(it.p100.kcal*it.grams/100)}ккал</small></div>
+                       <button class="btn bad" style="width:35px" onclick="removeItem(${i})">×</button>`;
       list.appendChild(div);
     });
+
+    // Список управления базой
+    const baseList = $('baseList'); baseList.innerHTML = "";
+    FOODS.forEach((f, i) => {
+      const div = document.createElement('div'); div.className = 'item';
+      div.style.flexDirection = 'column'; div.style.alignItems = 'stretch';
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <b>${f.name}</b>
+          <button class="btn bad" style="width:30px;height:30px" onclick="deleteFromBase(${i})">×</button>
+        </div>
+        <div class="edit-grid">
+          <input class="inp" value="${f.name}" id="ename${i}" onchange="editBase(${i})">
+          <input class="inp" type="number" value="${f.kcal}" id="ekcal${i}" onchange="editBase(${i})">
+          <input class="inp" type="number" value="${f.p}" id="ep${i}" onchange="editBase(${i})">
+          <input class="inp" type="number" value="${f.f}" id="ef${i}" onchange="editBase(${i})">
+          <input class="inp" type="number" value="${f.c}" id="ec${i}" onchange="editBase(${i})">
+        </div>`;
+      baseList.appendChild(div);
+    });
     $('dateText').textContent = new Date(currentKey).toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
-    $('dayKeyText').textContent = currentKey.toUpperCase();
   }
 
-  window.editItem = (i) => {
-    const item = getDay().items[i];
-    $('grams').value = item.grams;
-    $('foodSearch').value = item.name;
-    rebuildSelect(item.name);
-    removeItem(i); // Удаляем старую версию, чтобы пользователь добавил исправленную
-    window.scrollTo({ top: $('inputSection').offsetTop - 20, behavior: 'smooth' });
+  window.editBase = (i) => {
+    FOODS[i] = { 
+      name: $('ename'+i).value, 
+      kcal: +$('ekcal'+i).value, 
+      p: +$('ep'+i).value, 
+      f: +$('ef'+i).value, 
+      c: +$('ec'+i).value 
+    };
+    save(); rebuildSelect();
   };
 
-  window.addWater = (v) => { const d = getDay(); d.water = (d.water || 0) + v; save(); };
-  window.resetWater = () => { getDay().water = 0; save(); };
+  window.deleteFromBase = (i) => { if(confirm("Удалить продукт из базы навсегда?")) { FOODS.splice(i,1); save(); rebuildSelect(); }};
+
+  window.addNewToBase = () => {
+    const name = prompt("Название продукта:"); if(!name) return;
+    FOODS.push({ name, kcal: 0, p: 0, f: 0, c: 0 });
+    save(); rebuildSelect();
+  };
+
   window.removeItem = (i) => { getDay().items.splice(i,1); save(); };
-  window.clearDay = () => { if(confirm("Удалить всё за этот день?")) { state.days[currentKey] = { items: [], water:0, workoutKcal:0, weight:"" }; save(); }};
-  
+  window.addWater = (v) => { getDay().water = (getDay().water || 0) + v; save(); };
+  window.clearDay = () => { if(confirm("Сбросить день?")) { state.days[currentKey] = { items: [], water:0 }; save(); }};
+
   $('addBtn').onclick = () => {
     const f = FOODS.find(x => x.name === $('foodSelect').value);
     if(f) { getDay().items.unshift({ name: f.name, grams: $('grams').value, p100: f }); save(); }
   };
 
-  $('customBtn').onclick = () => {
-    const name = prompt("Название:"); if(!name) return;
-    FOODS.push({ name, kcal: +prompt("Ккал:"), p: +prompt("Б:"), f: +prompt("Ж:"), c: +prompt("У:") });
-    save(); rebuildSelect();
-  };
-
   function rebuildSelect(f="") {
     const sel = $('foodSelect'); sel.innerHTML = "";
-    const filtered = FOODS.filter(x => x.name.toLowerCase().includes(f.toLowerCase())).sort((a,b)=>a.name.localeCompare(b.name));
-    filtered.forEach(x => {
+    FOODS.filter(x => x.name.toLowerCase().includes(f.toLowerCase())).forEach(x => {
       const o = document.createElement('option'); o.value = x.name; o.textContent = x.name; sel.appendChild(o);
     });
-    updateSelInfo();
-  }
-
-  function updateSelInfo() {
-    const f = FOODS.find(x => x.name === $('foodSelect').value);
-    $('selInfo').textContent = f ? `100г: ${f.kcal}ккал | Б:${f.p} Ж:${f.f} У:${f.c}` : "База пуста";
   }
 
   ['K','P','F','C'].forEach(l => {
@@ -254,17 +196,8 @@
     $('goal'+l).oninput = (e) => { goals[l.toLowerCase()] = e.target.value; save(); };
   });
 
-  $('workout').oninput = (e) => { getDay().workoutKcal = e.target.value; save(); };
-  $('weight').oninput = (e) => { getDay().weight = e.target.value; save(); };
   $('dayPicker').onchange = (e) => { currentKey = e.target.value; updateUI(); };
-
-  function changeDay(d) {
-    let dt = new Date(currentKey); dt.setDate(dt.getDate() + d);
-    currentKey = dt.toISOString().split('T')[0]; $('dayPicker').value = currentKey; updateUI();
-  }
-  function goToday() {
-    currentKey = new Date().toISOString().split('T')[0]; $('dayPicker').value = currentKey; updateUI();
-  }
+  function goToday() { currentKey = new Date().toISOString().split('T')[0]; $('dayPicker').value = currentKey; updateUI(); }
 
   $('dayPicker').value = currentKey;
   rebuildSelect();
