@@ -7,8 +7,7 @@
   <style>
     :root{
       --bg:#0b0f14; --card:#121826; --text:#e8edf6; --mut:#8ea0b8;
-      --acc:#4da3ff; --ok:#44d07b; --warn:#ffcf5a; --bad:#ff5a6a;
-      --bd:rgba(255,255,255,.08);
+      --acc:#4da3ff; --ok:#44d07b; --bad:#ff5a6a; --bd:rgba(255,255,255,.08);
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--text)}
@@ -199,9 +198,8 @@
 
 <script>
 (() => {
-  // ======= БАЗА ПРОДУКТОВ (на 100г) =======
-  // kcal, p, f, c
-  const FOODS = [
+  // ======= ПРОДУКТЫ (на 100г) =======
+  const DEFAULT_FOODS = [
     ["Творог 5%",          121, 17.0, 5.0, 3.0],
     ["Творог 0-1%",         80, 18.0, 1.0, 3.0],
     ["Яйцо варёное",       155, 13.0,11.0, 1.1],
@@ -224,6 +222,21 @@
     ["Хлеб",               250,  8.0,3.0, 49.0],
   ].map(([name,kcal,p,f,c]) => ({name,kcal,p,f,c}));
 
+  const CUSTOM_FOODS_KEY = "kcal_tracker_custom_foods_v1";
+
+  function loadCustomFoods(){
+    try{
+      const raw = localStorage.getItem(CUSTOM_FOODS_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveCustomFoods(arr){
+    localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(arr));
+  }
+
+  let FOODS = [...DEFAULT_FOODS, ...loadCustomFoods()];
+
   // ======= УТИЛИТЫ =======
   const $ = (id) => document.getElementById(id);
   const fmt = (n, d=0) => (Number.isFinite(n) ? n.toFixed(d) : "0");
@@ -240,7 +253,7 @@
     return d.toLocaleDateString("ru-RU", opts);
   };
 
-  // ======= ХРАНЕНИЕ =======
+  // ======= ХРАНЕНИЕ ДНЕЙ =======
   const KEY = "kcal_tracker_v1";
   const state = {
     days: {}, // dayKey: { items: [{name, grams, per100:{kcal,p,f,c}}], waterL, weight }
@@ -292,7 +305,7 @@
     return state.days[ensureDay()];
   }
 
-  // ======= ЛОГИКА СЧЁТА =======
+  // ======= СЧЁТ =======
   function totals() {
     const items = day().items;
     let kcal=0,p=0,f=0,c=0;
@@ -316,7 +329,7 @@
     $("waterLiters").textContent = fmt(day().waterL,1);
   }
 
-  // ======= UI: список еды =======
+  // ======= UI: продукты =======
   const foodSelect = $("foodSelect");
   const foodSearch = $("foodSearch");
   const gramsInp = $("grams");
@@ -327,7 +340,11 @@
   function rebuildSelect(filter="") {
     const f = filter.trim().toLowerCase();
     foodSelect.innerHTML = "";
-    const filtered = FOODS.filter(x => !f || x.name.toLowerCase().includes(f));
+    const filtered = FOODS
+      .slice()
+      .sort((a,b) => a.name.localeCompare(b.name, "ru"))
+      .filter(x => !f || x.name.toLowerCase().includes(f));
+
     for(const x of filtered){
       const opt = document.createElement("option");
       opt.value = x.name;
@@ -347,6 +364,18 @@
     const f = getFoodByName(foodSelect.value);
     if(!f){ selInfo.textContent = "—"; return; }
     selInfo.textContent = `на 100г: ${f.kcal} ккал • Б ${f.p} • Ж ${f.f} • У ${f.c}`;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function addFoodToDay(name, grams, per100){
+    day().items.unshift({ name, grams, per100 });
+    saveSoon();
+    render();
   }
 
   function renderList() {
@@ -383,18 +412,6 @@
     });
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, m => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[m]));
-  }
-
-  function addFood(name, grams, per100){
-    day().items.unshift({ name, grams, per100 });
-    saveSoon();
-    render();
-  }
-
   function render() {
     $("dateText").textContent = niceDate();
     $("dayKeyText").textContent = todayKey();
@@ -409,18 +426,34 @@
     const g = Math.max(1, Math.round(Number(gramsInp.value)||0));
     const f = getFoodByName(name);
     if(!f) return;
-    addFood(f.name, g, {kcal:f.kcal, p:f.p, f:f.f, c:f.c});
+    addFoodToDay(f.name, g, {kcal:f.kcal, p:f.p, f:f.f, c:f.c});
   });
 
+  // ВАЖНО: "СВОЙ" теперь сохраняется в базе и появляется в списке навсегда
   $("customBtn").addEventListener("click", () => {
-    const name = prompt("Название продукта:");
+    const name = (prompt("Название продукта:") || "").trim();
     if(!name) return;
+
     const kcal = Number(prompt("Ккал на 100г:", "0")) || 0;
     const p = Number(prompt("Белки на 100г:", "0")) || 0;
     const f = Number(prompt("Жиры на 100г:", "0")) || 0;
     const c = Number(prompt("Углеводы на 100г:", "0")) || 0;
+
+    // если такого названия нет — добавляем в кастом
+    const exists = FOODS.some(x => x.name.toLowerCase() === name.toLowerCase());
+    if(!exists){
+      const custom = loadCustomFoods();
+      custom.push({name, kcal, p, f, c});
+      saveCustomFoods(custom);
+
+      FOODS = [...DEFAULT_FOODS, ...custom];
+      rebuildSelect($("foodSearch").value);
+      foodSelect.value = name;
+      updateSelInfo();
+    }
+
     const g = Math.max(1, Math.round(Number(gramsInp.value)||100));
-    addFood(name.trim(), g, {kcal, p, f, c});
+    addFoodToDay(name, g, {kcal, p, f, c});
   });
 
   foodSelect.addEventListener("change", updateSelInfo);
@@ -526,8 +559,9 @@
 
   // Сбросить всё
   $("resetAll").addEventListener("click", () => {
-    if(!confirm("Точно удалить все данные (все дни)?")) return;
+    if(!confirm("Точно удалить все данные (все дни и свои продукты тоже)?")) return;
     localStorage.removeItem(KEY);
+    localStorage.removeItem(CUSTOM_FOODS_KEY);
     location.reload();
   });
 
